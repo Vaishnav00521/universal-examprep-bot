@@ -2,290 +2,809 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Universal AI Tutor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+    <title>NexGen AI Workspace</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* =========================================
+           1. CORE VARIABLES & RESET
+           ========================================= */
         :root {
-            --bg-color: #050505;
-            --card-bg: rgba(20, 20, 20, 0.8);
-            --accent: #6366f1; /* Indigo */
-            --accent-glow: rgba(99, 102, 241, 0.4);
-            --text: #ffffff;
+            /* Theme Colors: Deep Aurora v2 */
+            --bg-deep: #020617;       /* Darker than black */
+            --bg-glass: rgba(15, 23, 42, 0.6);
+            --bg-sidebar: rgba(2, 6, 23, 0.8);
+
+            /* Neon Gradients */
+            --primary-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            --secondary-gradient: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+
+            /* Accents */
+            --accent-cyan: #22d3ee;
+            --accent-purple: #c084fc;
+            --accent-green: #34d399;
+            --accent-glow: rgba(56, 189, 248, 0.15);
+
+            /* Typography */
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --font-sans: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            /* Borders & Shadows */
+            --border-glass: 1px solid rgba(255, 255, 255, 0.08);
+            --shadow-glass: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg-color);
-            color: var(--text);
             margin: 0;
+            padding: 0;
+            font-family: var(--font-sans);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            /* FIXED: Viewport centering logic */
             height: 100vh;
+            width: 100vw;
             display: flex;
             justify-content: center;
+            align-items: center;
             overflow: hidden;
+            background-image:
+                radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
         }
 
-        /* Animated Background Mesh */
-        .background-fx {
-            position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: radial-gradient(circle at center, #1a1a2e 0%, #000 70%);
-            z-index: -1;
-            animation: pulseBg 10s infinite alternate;
-        }
-        @keyframes pulseBg { 0% { opacity: 0.5; transform: scale(1); } 100% { opacity: 0.8; transform: scale(1.05); } }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
-        /* Main Container */
-        .container {
-            width: 95%; max-width: 1200px;
-            height: 95vh;
-            margin-top: 2.5vh;
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.08);
+        /* =========================================
+           2. MAIN LAYOUT CONTAINER (FIXED)
+           ========================================= */
+        .app-container {
+            /* FIXED: Clamp ensures it fits nicely on all screens */
+            width: clamp(900px, 95vw, 1600px);
+            height: clamp(600px, 92vh, 1200px);
+
+            background: var(--bg-glass);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: var(--border-glass);
             border-radius: 24px;
-            display: flex;
-            overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+
+            display: grid;
+            grid-template-columns: 280px 1fr; /* Fixed Sidebar, Fluid Chat */
+
+            box-shadow: var(--shadow-glass);
+            overflow: hidden; /* Contains all children */
+            position: relative;
         }
 
-        /* Sidebar */
+        /* Top Accent Line */
+        .app-container::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            opacity: 0.5;
+        }
+
+        /* =========================================
+           3. SIDEBAR
+           ========================================= */
         .sidebar {
-            width: 280px;
-            padding: 30px;
-            border-right: 1px solid rgba(255,255,255,0.08);
+            background: var(--bg-sidebar);
+            border-right: var(--border-glass);
+            padding: 25px;
             display: flex;
             flex-direction: column;
             gap: 20px;
+            height: 100%;
+            z-index: 10;
         }
 
+        /* Brand */
         .brand {
-            font-size: 1.4rem;
-            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 10px;
-            background: linear-gradient(90deg, #fff, #aaa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            gap: 12px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            padding-bottom: 20px;
+            border-bottom: var(--border-glass);
         }
+        .brand-icon {
+            width: 36px; height: 36px;
+            background: var(--primary-gradient);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }
+        .brand-icon i { font-size: 1.2rem; color: #fff; }
 
-        .lang-badge {
+        /* Stats Row */
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
             font-size: 0.75rem;
-            color: #888;
-            background: rgba(255,255,255,0.05);
-            padding: 5px 10px;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.03);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: var(--border-glass);
+        }
+        .stat-item { display: flex; align-items: center; gap: 5px; }
+        .stat-dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; box-shadow: 0 0 5px var(--accent-green); }
+
+        /* NLP Badge */
+        .nlp-card {
+            background: rgba(34, 211, 238, 0.05);
+            border: 1px solid rgba(34, 211, 238, 0.1);
+            padding: 15px;
             border-radius: 12px;
-            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.6;
         }
+        .nlp-card strong { color: var(--accent-cyan); display: block; margin-bottom: 4px; font-size: 0.9rem; }
 
-        .upload-box {
-            border: 2px dashed #333;
-            border-radius: 16px;
-            padding: 40px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .upload-box:hover { border-color: var(--accent); background: rgba(99, 102, 241, 0.05); }
-        .upload-icon { font-size: 2rem; color: #555; margin-bottom: 10px; }
-
-        /* Chat Area */
-        .chat-section {
+        /* Upload Zone */
+        .upload-zone {
             flex: 1;
             display: flex;
             flex-direction: column;
+            justify-content: center; /* Centers the box vertically in remaining space */
         }
 
-        .chat-window {
+        .upload-box {
+            border: 2px dashed rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 30px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.02);
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-box:hover {
+            border-color: var(--accent-cyan);
+            background: rgba(34, 211, 238, 0.03);
+            transform: translateY(-2px);
+        }
+        .upload-icon {
+            font-size: 2rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+        .upload-box:hover .upload-icon { color: var(--accent-cyan); transform: scale(1.1); }
+        .upload-title { font-weight: 600; color: #fff; margin-bottom: 4px; font-size: 0.95rem; }
+        .upload-desc { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Progress */
+        .progress-wrapper {
+            margin-top: 15px;
+            background: rgba(255,255,255,0.05);
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-cyan);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: var(--border-glass);
+            padding-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .footer-btn {
+            background: rgba(255,255,255,0.03);
+            border: var(--border-glass);
+            color: var(--text-muted);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex; justify-content: center; align-items: center; gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .footer-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.2); }
+
+        /* =========================================
+           4. CHAT AREA
+           ========================================= */
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: radial-gradient(circle at center, rgba(30, 41, 59, 0.3) 0%, transparent 80%);
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .chat-header {
+            height: 70px;
+            padding: 0 30px;
+            border-bottom: var(--border-glass);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(2, 6, 23, 0.4);
+        }
+        .session-info h2 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+        .session-info span { font-size: 0.8rem; color: var(--text-muted); }
+
+        .model-pill {
+            background: rgba(167, 139, 250, 0.1);
+            color: var(--accent-purple);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .blink-dot { width: 6px; height: 6px; background: var(--accent-purple); border-radius: 50%; animation: pulse 2s infinite; }
+
+        /* Messages Window */
+        .messages-window {
             flex: 1;
             padding: 40px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 24px;
+            scroll-behavior: smooth;
         }
 
-        .message {
-            max-width: 80%;
-            line-height: 1.6;
-            animation: fadeUp 0.4s ease;
+        /* Welcome State */
+        .welcome-state {
+            margin: auto;
+            text-align: center;
+            max-width: 500px;
+            animation: fadeUp 0.6s ease;
         }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .welcome-icon { font-size: 3.5rem; margin-bottom: 20px; color: rgba(255,255,255,0.1); }
+        .welcome-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Quick Chips */
+        .chips-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .chip {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: left;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .chip i { color: var(--accent-cyan); font-size: 1.1rem; }
+        .chip:hover {
+            background: rgba(34, 211, 238, 0.05);
+            border-color: var(--accent-cyan);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* Chat Bubbles */
+        .msg {
+            max-width: 80%;
+            animation: slideIn 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+            position: relative;
+            line-height: 1.6;
+        }
 
         .user-msg {
             align-self: flex-end;
-            background: var(--accent);
+            background: var(--primary-gradient);
             color: white;
-            padding: 12px 20px;
+            padding: 14px 22px;
             border-radius: 18px 18px 4px 18px;
-            box-shadow: 0 4px 15px var(--accent-glow);
+            box-shadow: 0 8px 20px rgba(6, 182, 212, 0.2);
+            font-weight: 500;
         }
 
         .bot-msg {
             align-self: flex-start;
-            color: #ddd;
-            padding: 0 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: var(--text-main);
+            padding: 18px 26px;
+            border-radius: 18px 18px 18px 4px;
+            backdrop-filter: blur(10px);
         }
 
-        .bot-msg strong { color: var(--accent); }
-        .bot-msg code { background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-family: monospace; }
+        /* Bot Content Formatting */
+        .bot-msg strong { color: var(--accent-cyan); font-weight: 600; }
+        .bot-msg h3 { margin-top: 0; color: var(--text-main); font-size: 1.1rem; }
+        .bot-msg ul { padding-left: 20px; color: var(--text-muted); }
+        .bot-msg li { margin-bottom: 5px; }
+        .bot-msg code {
+            background: rgba(0,0,0,0.3);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            color: var(--accent-purple);
+            font-size: 0.85em;
+        }
+        .bot-msg pre {
+            background: #0b1120;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin: 15px 0;
+        }
 
-        /* Input Area */
-        .input-wrapper {
-            padding: 30px;
-            background: rgba(0,0,0,0.2);
+        /* =========================================
+           5. INPUT AREA
+           ========================================= */
+        .input-container {
+            padding: 25px 40px;
+            background: rgba(2, 6, 23, 0.6);
+            border-top: var(--border-glass);
             display: flex;
-            gap: 15px;
+            gap: 16px;
+            align-items: center;
+            backdrop-filter: blur(20px);
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
         }
 
         .chat-input {
-            flex: 1;
+            width: 100%;
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
-            padding: 18px 25px;
-            border-radius: 16px;
+            padding: 16px 24px;
+            padding-right: 50px; /* Space for mic */
+            border-radius: 14px;
             color: white;
             font-size: 1rem;
+            font-family: var(--font-sans);
             outline: none;
-            transition: 0.3s;
+            transition: all 0.2s ease;
         }
-        .chat-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
-        .chat-input:disabled { opacity: 0.5; cursor: not-allowed; }
+        .chat-input:focus {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.1);
+        }
+        .chat-input:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .send-btn {
-            width: 60px;
-            background: var(--accent);
+        /* Mic Button */
+        .mic-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
             border: none;
-            border-radius: 16px;
-            color: white;
+            color: var(--text-muted);
             font-size: 1.2rem;
             cursor: pointer;
             transition: 0.2s;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
         }
-        .send-btn:hover { transform: scale(1.05); }
+        .mic-btn:hover { color: var(--accent-cyan); background: rgba(255,255,255,0.1); }
+        .mic-active { color: #ef4444 !important; animation: pulseRed 1.5s infinite; }
+
+        /* Send Button */
+        .send-btn {
+            width: 54px;
+            height: 54px;
+            background: var(--secondary-gradient);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+        .send-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5); }
+        .send-btn:disabled { background: #334155; cursor: not-allowed; box-shadow: none; opacity: 0.5; }
+
+        /* =========================================
+           6. ANIMATIONS & LOADERS
+           ========================================= */
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        /* Neural Loader (Three bouncing bars) */
+        .neural-loader {
+            display: flex; align-items: center; gap: 4px; height: 20px;
+        }
+        .bar {
+            width: 4px; height: 10px; background: var(--accent-cyan); border-radius: 2px;
+            animation: neural 1s infinite ease-in-out;
+        }
+        .bar:nth-child(2) { animation-delay: 0.1s; height: 14px; background: var(--accent-purple); }
+        .bar:nth-child(3) { animation-delay: 0.2s; }
+
+        @keyframes neural {
+            0%, 100% { transform: scaleY(1); opacity: 0.5; }
+            50% { transform: scaleY(1.5); opacity: 1; }
+        }
 
     </style>
 </head>
 <body>
-<div class="background-fx"></div>
 
-<div class="container">
-    <div class="sidebar">
-        <div class="brand"><i class="ri-infinity-line"></i> Universal Bot</div>
-        <div class="lang-badge">🇮🇳 Hindi • 🇬🇧 English •  Hinglish</div>
-
-        <div style="flex:1;"></div>
-
-        <input type="file" id="fileInput" hidden accept=".pdf">
-        <div class="upload-box" onclick="document.getElementById('fileInput').click()">
-            <div class="upload-icon"><i class="ri-file-upload-line"></i></div>
-            <div id="uploadText">Upload PDF</div>
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon"><i class="ri-robot-3-line"></i></div>
+            <div>DocuMind <span style="font-weight:300; opacity:0.7">AI</span></div>
         </div>
-        <div id="progressBar" style="height:4px; width:0%; background:var(--accent); margin-top:10px; border-radius:2px; transition:width 0.3s;"></div>
-    </div>
 
-    <div class="chat-section">
-        <div class="chat-window" id="chatWindow">
-            <div class="message bot-msg">
-                <h3>👋 Namaste! Hello!</h3>
-                <p>I am your multilingual study partner. Upload your PDF notes, and ask me anything in <b>Hindi, English, or Hinglish.</b></p>
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-dot"></div> Online
+            </div>
+            <div class="stat-item" id="timer">00:00</div>
+        </div>
+
+        <div class="nlp-card">
+            <strong><i class="ri-translate-2"></i> NLP Engine v3.0</strong>
+            Supports Hindi, English & Hinglish. <br>
+            Auto-Context Detection Enabled.
+        </div>
+
+        <div class="upload-zone">
+            <input type="file" id="fileInput" hidden accept=".pdf">
+            <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon"><i class="ri-upload-cloud-2-fill"></i></div>
+                <div class="upload-title" id="uploadStatusText">Upload PDF</div>
+                <div class="upload-desc">Drag & drop or click to browse</div>
+            </div>
+
+            <div class="progress-wrapper" id="progressWrapper">
+                <div class="progress-bar" id="progressBar"></div>
             </div>
         </div>
 
-        <div class="input-wrapper">
-            <input type="text" class="chat-input" id="userInput" placeholder="Ask a question (e.g., 'Isme kya likha hai?')" disabled onkeypress="if(event.key==='Enter') sendMsg()">
-            <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled><i class="ri-send-plane-2-fill"></i></button>
+        <div class="sidebar-footer">
+            <button class="footer-btn" onclick="exportChat()" title="Download Chat">
+                <i class="ri-download-2-line"></i> Export
+            </button>
+            <button class="footer-btn" onclick="clearChat()" title="New Session">
+                <i class="ri-refresh-line"></i> Reset
+            </button>
         </div>
-    </div>
+    </aside>
+
+    <main class="chat-area">
+        <header class="chat-header">
+            <div class="session-info">
+                <h2>Workspace</h2>
+                <span>Session ID: <span id="sessionId" style="font-family:var(--font-mono); color:var(--accent-cyan)">...</span></span>
+            </div>
+            <div class="model-pill">
+                <div class="blink-dot"></div>
+                Llama-3-70B (Groq)
+            </div>
+        </header>
+
+        <div class="messages-window" id="chatWindow">
+            <div class="welcome-state" id="welcomeState">
+                <div class="welcome-icon"><i class="ri-bubble-chart-line"></i></div>
+                <h1 class="welcome-title">Neural Search Ready</h1>
+                <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom:30px;">
+                    Upload a document to unlock deep analysis. <br>
+                    I speak your language.
+                </p>
+
+                <div class="chips-grid">
+                    <div class="chip" onclick="useChip('Summarize this document in Hindi')">
+                        <i class="ri-file-list-3-line"></i> Summarize (Hindi)
+                    </div>
+                    <div class="chip" onclick="useChip('What are the key skills mentioned?')">
+                        <i class="ri-key-2-line"></i> Extract Key Skills
+                    </div>
+                    <div class="chip" onclick="useChip('Generate 5 interview questions')">
+                        <i class="ri-questionnaire-line"></i> Create Quiz
+                    </div>
+                    <div class="chip" onclick="useChip('Explain the main concept simply')">
+                        <i class="ri-lightbulb-flash-line"></i> Explain Simply
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <input type="text" class="chat-input" id="userInput"
+                       placeholder="Waiting for document upload..." disabled
+                       onkeypress="if(event.key==='Enter') sendMsg()">
+
+                <button class="mic-btn" id="micBtn" onclick="toggleVoice()" title="Voice Input">
+                    <i class="ri-mic-line"></i>
+                </button>
+            </div>
+
+            <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled>
+                <i class="ri-send-plane-fill"></i>
+            </button>
+        </div>
+    </main>
 </div>
 
 <script>
+    // --- GLOBAL VARIABLES ---
     let currentExamId = null;
-    const chatWindow = document.getElementById('chatWindow');
+    let recognition = null;
+    let isRecording = false;
+    let sessionStartTime = Date.now();
 
-    // 1. Upload Logic
+    const chatWindow = document.getElementById('chatWindow');
+    const sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    document.getElementById('sessionId').innerText = sessionId;
+
+    // --- 1. SESSION TIMER ---
+    setInterval(() => {
+        const delta = Math.floor((Date.now() - sessionStartTime) / 1000);
+        const m = Math.floor(delta / 60).toString().padStart(2, '0');
+        const s = (delta % 60).toString().padStart(2, '0');
+        document.getElementById('timer').innerText = `${m}:${s}`;
+    }, 1000);
+
+    // --- 2. FILE UPLOAD HANDLING ---
     document.getElementById('fileInput').addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if(!file) return;
 
-        document.getElementById('uploadText').innerText = "Analyzing...";
-        const bar = document.getElementById('progressBar');
+        // Update UI for Upload
+        const uploadBox = document.querySelector('.upload-box');
+        const statusText = document.getElementById('uploadStatusText');
+        const progressWrapper = document.getElementById('progressWrapper');
+        const progressBar = document.getElementById('progressBar');
 
-        // Fake animation while waiting for server
+        statusText.innerText = "Vectorizing Content...";
+        progressWrapper.style.display = 'block';
+
+        // Fake Progress Animation
         let width = 0;
-        const interval = setInterval(() => { if(width < 90) bar.style.width = (width+=5) + "%"; }, 500);
+        const interval = setInterval(() => {
+            if(width < 90) { width += 10; progressBar.style.width = width + "%"; }
+        }, 200);
 
         const formData = new FormData();
         formData.append("file", file);
 
         try {
+            // Call Backend
             const res = await fetch('/api/exam/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+
             clearInterval(interval);
-            bar.style.width = "100%";
+            progressBar.style.width = "100%";
 
             if(res.ok) {
-                const data = await res.json();
                 currentExamId = data.examId;
-                document.getElementById('uploadText').innerHTML = `<i class="ri-check-line"></i> Done`;
-                document.getElementById('userInput').disabled = false;
+
+                // Success UI
+                statusText.innerHTML = `<span style="color:var(--accent-green)">Indexing Complete</span>`;
+                uploadBox.style.borderColor = "var(--accent-green)";
+                uploadBox.style.background = "rgba(52, 211, 153, 0.05)";
+                document.querySelector('.upload-icon').style.color = "var(--accent-green)";
+                document.querySelector('.upload-icon').innerHTML = '<i class="ri-check-double-line"></i>';
+
+                // Enable Chat
+                const input = document.getElementById('userInput');
+                input.disabled = false;
                 document.getElementById('sendBtn').disabled = false;
-                addBotMsg("PDF successfully analyzed! Ab aap koi bhi sawal pooch sakte hain.");
+                input.placeholder = "Ask anything (e.g. 'Iska summary batao')...";
+                input.focus();
+
+                // Hide Welcome, Show System Msg
+                document.getElementById('welcomeState').style.display = 'none';
+                addBotMsg("✅ **System Online.**\nDocument successfully indexed into the Vector Database. You can now ask questions in **Hindi**, **English**, or **Hinglish**.");
+
+                setTimeout(() => { progressWrapper.style.display = 'none'; }, 2000);
             } else {
-                alert("Upload failed. Check console.");
+                throw new Error(data.error || "Upload failed");
             }
         } catch(err) {
             console.error(err);
-            alert("Server connection failed");
+            statusText.innerText = "Upload Failed";
+            progressBar.style.backgroundColor = "#ef4444";
+            alert("Error: " + err.message);
         }
     });
 
-    // 2. Chat Logic
+    // --- 3. CHAT LOGIC ---
     async function sendMsg() {
         const input = document.getElementById('userInput');
         const text = input.value.trim();
         if(!text) return;
 
-        // User Message
+        // 1. Add User Message
         const userDiv = document.createElement('div');
-        userDiv.className = 'message user-msg';
+        userDiv.className = 'msg user-msg';
         userDiv.innerText = text;
         chatWindow.appendChild(userDiv);
+
         input.value = "";
         scrollToBottom();
 
-        // Loading Indicator
+        // 2. Add Neural Loader
         const loaderDiv = document.createElement('div');
-        loaderDiv.className = 'message bot-msg';
-        loaderDiv.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Thinking...';
+        loaderDiv.className = 'msg bot-msg';
+        loaderDiv.innerHTML = `
+            <div class="neural-loader">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+            <span style="font-size:0.8rem; color:var(--text-muted); margin-left:10px;">Deep Thinking...</span>
+        `;
+        loaderDiv.id = "activeLoader";
         chatWindow.appendChild(loaderDiv);
+        scrollToBottom();
 
         try {
+            // 3. Fetch Response
             const res = await fetch(`/api/exam/chat?examId=${currentExamId}&query=${encodeURIComponent(text)}`);
             const data = await res.json();
 
-            loaderDiv.remove(); // Remove loader
-            addBotMsg(data.answer); // Add real answer
+            // 4. Remove Loader
+            document.getElementById("activeLoader").remove();
+
+            if(data.answer) {
+                addBotMsg(data.answer);
+            } else {
+                addBotMsg("⚠️ **System Alert:** Empty response received from Neural Engine.");
+            }
         } catch(err) {
-            loaderDiv.innerText = "Error getting response.";
+            if(document.getElementById("activeLoader")) document.getElementById("activeLoader").remove();
+            addBotMsg("❌ **Connection Severed.**\nUnable to reach the backend. Please check if the Java server is running.");
         }
     }
 
-    function addBotMsg(markdownText) {
+    // --- 4. MESSAGE RENDERER ---
+    function addBotMsg(text) {
         const div = document.createElement('div');
-        div.className = 'message bot-msg';
-        // Parse Markdown to HTML (makes bold, lists, code look good)
-        div.innerHTML = marked.parse(markdownText);
+        div.className = 'msg bot-msg';
+        div.innerHTML = marked.parse(text); // Render Markdown
         chatWindow.appendChild(div);
         scrollToBottom();
     }
 
     function scrollToBottom() {
         chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // --- 5. VOICE INPUT (New Feature) ---
+    function toggleVoice() {
+        const micBtn = document.getElementById('micBtn');
+        const input = document.getElementById('userInput');
+
+        if (!('webkitSpeechRecognition' in window)) {
+            alert("Voice input requires Chrome/Edge/Safari.");
+            return;
+        }
+
+        if (isRecording) {
+            recognition.stop();
+            return;
+        }
+
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.lang = 'en-US'; // Works reasonably well for Hinglish
+        recognition.interimResults = false;
+
+        recognition.onstart = function() {
+            isRecording = true;
+            micBtn.classList.add('mic-active');
+            input.placeholder = "Listening...";
+        };
+
+        recognition.onend = function() {
+            isRecording = false;
+            micBtn.classList.remove('mic-active');
+            input.placeholder = "Ask anything...";
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            input.value = transcript;
+            setTimeout(sendMsg, 500); // Auto-send
+        };
+
+        recognition.start();
+    }
+
+    // --- 6. UTILITIES ---
+    function useChip(text) {
+        if(!currentExamId) {
+            alert("Please upload a PDF document first to activate context.");
+            return;
+        }
+        document.getElementById('userInput').value = text;
+        sendMsg();
+    }
+
+    function clearChat() {
+        if(confirm("Reset entire session memory?")) {
+            chatWindow.innerHTML = '';
+            // Restore welcome screen (clone it)
+            location.reload();
+        }
+    }
+
+    function exportChat() {
+        const messages = [];
+        document.querySelectorAll('.msg').forEach(msg => {
+            const isUser = msg.classList.contains('user-msg');
+            const sender = isUser ? 'USER' : 'AI';
+            messages.push(`[${sender}]: ${msg.innerText.replace(/\n/g, ' ')}`);
+        });
+
+        if(messages.length === 0) {
+            alert("No conversation to export.");
+            return;
+        }
+
+        const blob = new Blob([messages.join('\n\n')], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `DocuMind_Session_${sessionId}.txt`;
+        a.click();
     }
 </script>
 </body>
