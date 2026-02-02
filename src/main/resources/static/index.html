@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Universal AI Tutor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+
+        :root {
+            --bg-color: #050505;
+            --card-bg: rgba(20, 20, 20, 0.8);
+            --accent: #6366f1; /* Indigo */
+            --accent-glow: rgba(99, 102, 241, 0.4);
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Animated Background Mesh */
+        .background-fx {
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #000 70%);
+            z-index: -1;
+            animation: pulseBg 10s infinite alternate;
+        }
+        @keyframes pulseBg { 0% { opacity: 0.5; transform: scale(1); } 100% { opacity: 0.8; transform: scale(1.05); } }
+
+        /* Main Container */
+        .container {
+            width: 95%; max-width: 1200px;
+            height: 95vh;
+            margin-top: 2.5vh;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            padding: 30px;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .brand {
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(90deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .lang-badge {
+            font-size: 0.75rem;
+            color: #888;
+            background: rgba(255,255,255,0.05);
+            padding: 5px 10px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .upload-box {
+            border: 2px dashed #333;
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .upload-box:hover { border-color: var(--accent); background: rgba(99, 102, 241, 0.05); }
+        .upload-icon { font-size: 2rem; color: #555; margin-bottom: 10px; }
+
+        /* Chat Area */
+        .chat-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-window {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .message {
+            max-width: 80%;
+            line-height: 1.6;
+            animation: fadeUp 0.4s ease;
+        }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+        .user-msg {
+            align-self: flex-end;
+            background: var(--accent);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 18px 18px 4px 18px;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .bot-msg {
+            align-self: flex-start;
+            color: #ddd;
+            padding: 0 10px;
+        }
+
+        .bot-msg strong { color: var(--accent); }
+        .bot-msg code { background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-family: monospace; }
+
+        /* Input Area */
+        .input-wrapper {
+            padding: 30px;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            gap: 15px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 18px 25px;
+            border-radius: 16px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+        .chat-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+        .chat-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .send-btn {
+            width: 60px;
+            background: var(--accent);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .send-btn:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+<div class="background-fx"></div>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="brand"><i class="ri-infinity-line"></i> Universal Bot</div>
+        <div class="lang-badge">🇮🇳 Hindi • 🇬🇧 English •  Hinglish</div>
+
+        <div style="flex:1;"></div>
+
+        <input type="file" id="fileInput" hidden accept=".pdf">
+        <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon"><i class="ri-file-upload-line"></i></div>
+            <div id="uploadText">Upload PDF</div>
+        </div>
+        <div id="progressBar" style="height:4px; width:0%; background:var(--accent); margin-top:10px; border-radius:2px; transition:width 0.3s;"></div>
+    </div>
+
+    <div class="chat-section">
+        <div class="chat-window" id="chatWindow">
+            <div class="message bot-msg">
+                <h3>👋 Namaste! Hello!</h3>
+                <p>I am your multilingual study partner. Upload your PDF notes, and ask me anything in <b>Hindi, English, or Hinglish.</b></p>
+            </div>
+        </div>
+
+        <div class="input-wrapper">
+            <input type="text" class="chat-input" id="userInput" placeholder="Ask a question (e.g., 'Isme kya likha hai?')" disabled onkeypress="if(event.key==='Enter') sendMsg()">
+            <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled><i class="ri-send-plane-2-fill"></i></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentExamId = null;
+    const chatWindow = document.getElementById('chatWindow');
+
+    // 1. Upload Logic
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+
+        document.getElementById('uploadText').innerText = "Analyzing...";
+        const bar = document.getElementById('progressBar');
+
+        // Fake animation while waiting for server
+        let width = 0;
+        const interval = setInterval(() => { if(width < 90) bar.style.width = (width+=5) + "%"; }, 500);
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await fetch('/api/exam/upload', { method: 'POST', body: formData });
+            clearInterval(interval);
+            bar.style.width = "100%";
+
+            if(res.ok) {
+                const data = await res.json();
+                currentExamId = data.examId;
+                document.getElementById('uploadText').innerHTML = `<i class="ri-check-line"></i> Done`;
+                document.getElementById('userInput').disabled = false;
+                document.getElementById('sendBtn').disabled = false;
+                addBotMsg("PDF successfully analyzed! Ab aap koi bhi sawal pooch sakte hain.");
+            } else {
+                alert("Upload failed. Check console.");
+            }
+        } catch(err) {
+            console.error(err);
+            alert("Server connection failed");
+        }
+    });
+
+    // 2. Chat Logic
+    async function sendMsg() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if(!text) return;
+
+        // User Message
+        const userDiv = document.createElement('div');
+        userDiv.className = 'message user-msg';
+        userDiv.innerText = text;
+        chatWindow.appendChild(userDiv);
+        input.value = "";
+        scrollToBottom();
+
+        // Loading Indicator
+        const loaderDiv = document.createElement('div');
+        loaderDiv.className = 'message bot-msg';
+        loaderDiv.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Thinking...';
+        chatWindow.appendChild(loaderDiv);
+
+        try {
+            const res = await fetch(`/api/exam/chat?examId=${currentExamId}&query=${encodeURIComponent(text)}`);
+            const data = await res.json();
+
+            loaderDiv.remove(); // Remove loader
+            addBotMsg(data.answer); // Add real answer
+        } catch(err) {
+            loaderDiv.innerText = "Error getting response.";
+        }
+    }
+
+    function addBotMsg(markdownText) {
+        const div = document.createElement('div');
+        div.className = 'message bot-msg';
+        // Parse Markdown to HTML (makes bold, lists, code look good)
+        div.innerHTML = marked.parse(markdownText);
+        chatWindow.appendChild(div);
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+</script>
+</body>
+</html>

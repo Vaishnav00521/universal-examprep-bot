@@ -1,0 +1,48 @@
+spring.application.name=universal-bot
+
+# ==========================================
+# 1. EMBEDDING CONFIG (Local Ollama - FREE)
+# ==========================================
+# We use this to read the PDF locally
+spring.ai.ollama.embedding.enabled=true
+spring.ai.ollama.chat.enabled=false
+spring.ai.ollama.base-url=http://localhost:11434
+spring.ai.ollama.embedding.options.model=nomic-embed-text
+
+# ==========================================
+# 2. CHAT CONFIG (Groq Cloud - FAST)
+# ==========================================
+# We use the OpenAI driver to talk to Groq
+spring.ai.openai.chat.enabled=true
+spring.ai.openai.embedding.enabled=false
+
+# CRITICAL: Point to Groq's API
+spring.ai.openai.base-url=https://api.groq.com/openai/v1
+
+# REPLACE THIS WITH YOUR REAL KEY BEFORE RUNNING
+spring.ai.openai.api-key=INSERT_YOUR_GROQ_API_KEY_HERE
+
+# Using the latest Llama 3.3 model
+spring.ai.openai.chat.options.model=llama-3.3-70b-versatile
+spring.ai.openai.chat.options.temperature=0.7
+
+# ==========================================
+# 3. DATABASE (Postgres / Docker)
+# ==========================================
+spring.datasource.url=jdbc:postgresql://localhost:5432/exambot
+spring.datasource.username=myuser
+spring.datasource.password=INSERT_DB_PASSWORD_HERE
+
+# ==========================================
+# 4. VECTOR STORE
+# ==========================================
+spring.ai.vectorstore.pgvector.initialize-schema=true
+spring.ai.vectorstore.pgvector.index-type=HNSW
+# Nomic uses 768 dimensions
+spring.ai.vectorstore.pgvector.dimension=768
+
+# ==========================================
+# 5. UPLOAD LIMITS
+# ==========================================
+spring.servlet.multipart.max-file-size=20MB
+spring.servlet.multipart.max-request-size=20MB
